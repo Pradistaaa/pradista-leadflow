@@ -5826,7 +5826,7 @@ render();
 
 document.addEventListener(
   "click",
-  (event) => {
+    async (event) => {
 
     const whatsappLink =
       event.target.closest(".whatsapp-link");
@@ -5904,21 +5904,36 @@ if (whatsappNumber) {
     activePipelineLead = lead;
 
     // NEW → CONTACTED
-    if (lead.status === "new") {
+if (lead.status === "new") {
 
-      lead.status = "contacted";
+  lead.status = "contacted";
 
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(leads)
-      );
+  // Simpan lokal
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(leads)
+  );
 
-      // Refresh semua tampilan
-      render();
-      populateLeadFilters();
-      renderPipeline();
-      renderFollowup();
-    }
+  // Simpan status ke Supabase
+  const { error } = await supabase
+    .from("leadflow_leads")
+    .update({
+      status: "contacted",
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", lead.cloudId || lead.id);
+
+  if (error) {
+    console.error("Gagal update status:", error);
+    alert("Status gagal disimpan ke database.");
+  }
+
+  // Refresh tampilan
+  render();
+  populateLeadFilters();
+  renderPipeline();
+  renderFollowup();
+}
 
   }
 );
@@ -8171,7 +8186,7 @@ event.stopImmediatePropagation();
 
 campaignList?.addEventListener(
   "click",
-  (event) => {
+  async (event) => {
 
     const deleteButton =
       event.target.closest(
@@ -8206,11 +8221,46 @@ campaignList?.addEventListener(
       return;
     }
 
+    /* =========================
+       DELETE DARI SUPABASE
+       ========================= */
+
+    const { error } =
+      await supabase
+        .from("leadflow_campaigns")
+        .delete()
+        .eq(
+          "id",
+          campaign.cloudId || campaign.id
+        );
+
+    if (error) {
+
+      console.error(
+        "Gagal menghapus campaign:",
+        error
+      );
+
+      alert(
+        "Campaign gagal dihapus dari Supabase."
+      );
+
+      return;
+    }
+
+    /* =========================
+       HAPUS DARI DATA CRM
+       ========================= */
+
     campaigns =
       campaigns.filter(
         item =>
           Number(item.id) !== campaignId
       );
+
+    /* =========================
+       UPDATE CACHE LOKAL
+       ========================= */
 
     localStorage.setItem(
       CAMPAIGN_STORAGE_KEY,
@@ -8220,12 +8270,17 @@ campaignList?.addEventListener(
     updateCampaignStats();
     renderCampaigns();
 
+    console.log(
+      "Campaign berhasil dihapus dari Supabase:",
+      campaign
+    );
+
   }
 );
 
 saveCampaignBtn?.addEventListener(
   "click",
-  () => {
+  async () => {
 
     const name =
       campaignNameInput.value.trim();
@@ -8273,26 +8328,63 @@ if (editingId) {
         Number(editingId)
     );
 
-  if (campaign) {
+  if (!campaign) {
+    alert("Campaign tidak ditemukan.");
+    return;
+  }
 
-    campaign.name =
-      name;
+  campaign.name =
+    name;
 
-    campaign.target =
-      campaignTargetInput.value;
+  campaign.target =
+    campaignTargetInput.value;
 
-    campaign.category =
-      campaignCategoryInput.value;
+  campaign.category =
+    campaignCategoryInput.value;
 
-    campaign.status =
-      campaignStatusInput.value;
+  campaign.status =
+    campaignStatusInput.value;
 
-    campaign.message =
-      message;
+  campaign.message =
+    message;
 
-    campaign.updatedAt =
-      new Date().toISOString();
+  campaign.updatedAt =
+    new Date().toISOString();
 
+
+  /* =========================
+     UPDATE SUPABASE
+     ========================= */
+
+  const { error } =
+    await supabase
+      .from("leadflow_campaigns")
+      .update({
+        name: campaign.name,
+        target: campaign.target,
+        category: campaign.category,
+        status: campaign.status,
+        message: campaign.message,
+        updated_at: campaign.updatedAt
+      })
+      .eq(
+        "id",
+        campaign.cloudId || campaign.id
+      );
+
+
+  if (error) {
+
+    console.error(
+      "Gagal memperbarui campaign:",
+      error
+    );
+
+    alert(
+      "Campaign gagal diperbarui di Supabase."
+    );
+
+    return;
   }
 
 
@@ -8303,7 +8395,6 @@ if (editingId) {
 
 
   delete saveCampaignBtn.dataset.editingId;
-
 
   saveCampaignBtn.textContent =
     "Simpan Campaign";
@@ -8338,50 +8429,82 @@ if (editingId) {
 
 
     const campaign = {
+  id: crypto.randomUUID(),
 
-      id: Date.now(),
+  name,
 
-      name,
+  target:
+    campaignTargetInput.value,
 
-      target:
-        campaignTargetInput.value,
+  category:
+    campaignCategoryInput.value,
 
-      category:
-        campaignCategoryInput.value,
+  status:
+    campaignStatusInput.value,
 
-      status:
-        campaignStatusInput.value,
+  message,
 
-      message,
-
-      createdAt:
-        new Date().toISOString()
-
-    };
+  createdAt:
+    new Date().toISOString()
+};
 
 
-    campaigns.unshift(
-      campaign
-    );
+// Simpan campaign baru ke Supabase
+const { data: savedCampaign, error } =
+  await supabase
+    .from("leadflow_campaigns")
+    .insert(
+      campaignToDatabase(campaign)
+    )
+    .select()
+    .single();
+
+if (error) {
+  console.error(
+    "Gagal menambah campaign:",
+    error
+  );
+
+  alert(
+    "Campaign belum tersimpan ke Supabase."
+  );
+
+  return;
+}
 
 
-    localStorage.setItem(
-      CAMPAIGN_STORAGE_KEY,
-      JSON.stringify(campaigns)
-    );
+// Gunakan ID dari Supabase
+campaign.id =
+  getUiId(savedCampaign.id);
+
+campaign.cloudId =
+  savedCampaign.id;
 
 
-    alert(
-      "Campaign berhasil disimpan."
-    );
+// Masukkan ke daftar CRM
+campaigns.unshift(
+  campaign
+);
 
-    updateCampaignStats();
-    renderCampaigns();
 
-    console.log(
-      "Campaign tersimpan:",
-      campaign
-    );
+// Simpan cache lokal
+localStorage.setItem(
+  CAMPAIGN_STORAGE_KEY,
+  JSON.stringify(campaigns)
+);
+
+
+alert(
+  "Campaign berhasil disimpan."
+);
+
+updateCampaignStats();
+renderCampaigns();
+
+console.log(
+  "Campaign tersimpan ke Supabase:",
+  campaign
+);
 
   }
 );
@@ -9926,67 +10049,33 @@ async function mulaiDataGlobal() {
     let sharedLeads = leadResult.data || [];
     let sharedCampaigns = campaignResult.data || [];
 
-    if (sharedLeads.length === 0 && localLeads.length > 0) {
-      const lanjut = confirm(
-        "Database global masih kosong. Salin " +
-        localLeads.length +
-        " lead dari browser ini ke data bersama?"
-      );
+    console.log(
+  "JUMLAH CAMPAIGN DARI SUPABASE:",
+  sharedCampaigns.length
+);
 
-      if (lanjut) {
-        const dataLeadLama = localLeads.map((lead) =>
-          leadToDatabase({
-            ...lead,
-            id: crypto.randomUUID()
-          })
-        );
+console.log(
+  "CAMPAIGN DARI SUPABASE:",
+  sharedCampaigns
+);
 
-        const hasil = await supabase
-          .from("leadflow_leads")
-          .insert(dataLeadLama)
-          .select();
+    // Supabase menjadi sumber utama data lead
+leads = sharedLeads.map(leadFromDatabase);
 
-        if (hasil.error) throw hasil.error;
+// Campaign tetap menggunakan data lokal sebagai sumber utama
+// Supabase menjadi sumber utama data campaign
+campaigns =
+  sharedCampaigns.map(campaignFromDatabase);
 
-        sharedLeads = hasil.data || [];
-      }
-    }
+localStorage.setItem(
+  STORAGE_KEY,
+  JSON.stringify(leads)
+);
 
-    if (
-      sharedCampaigns.length === 0 &&
-      localCampaigns.length > 0
-    ) {
-      const dataCampaignLama =
-        localCampaigns.map((campaign) =>
-          campaignToDatabase({
-            ...campaign,
-            id: crypto.randomUUID()
-          })
-        );
-
-      const hasil = await supabase
-        .from("leadflow_campaigns")
-        .insert(dataCampaignLama)
-        .select();
-
-      if (hasil.error) throw hasil.error;
-
-      sharedCampaigns = hasil.data || [];
-    }
-
-    leads = sharedLeads.map(leadFromDatabase);
-    campaigns =
-      sharedCampaigns.map(campaignFromDatabase);
-
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(leads)
-    );
-
-    localStorage.setItem(
-      CAMPAIGN_STORAGE_KEY,
-      JSON.stringify(campaigns)
-    );
+localStorage.setItem(
+  CAMPAIGN_STORAGE_KEY,
+  JSON.stringify(campaigns)
+);
 
     render();
     updateStats();
