@@ -5928,11 +5928,36 @@ if (lead.status === "new") {
     alert("Status gagal disimpan ke database.");
   }
 
-  // Refresh tampilan
-  render();
-  populateLeadFilters();
-  renderPipeline();
-  renderFollowup();
+// Update tampilan status
+const currentRow =
+  whatsappLink.closest("tr");
+
+if (currentRow) {
+
+  const statusElement =
+    currentRow.querySelector(".status");
+
+  if (statusElement) {
+
+    statusElement.textContent =
+      "Sudah Dihubungi";
+
+    statusElement.className =
+      "status status-contacted";
+  }
+
+  // Pindahkan lead yang baru dihubungi
+  // ke bagian paling bawah tabel.
+  const table =
+    document.getElementById("allLeadsTable");
+
+  if (table) {
+    table.appendChild(currentRow);
+  }
+}
+
+renderPipeline();
+renderFollowup();
 }
 
   }
@@ -6472,7 +6497,31 @@ function renderProspectResults(results) {
 
   if (!prospectResults) return;
 
-  if (!results || results.length === 0) {
+  const normalizeCompany = (value) =>
+    String(value || "")
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, " ");
+
+  const existingCompanies = new Set(
+    leads
+      .map((lead) => normalizeCompany(lead.company))
+      .filter(Boolean)
+  );
+
+  results = (results || []).filter((result) => {
+    const company = getProspectCompany(result);
+
+    if (!company) {
+      return true;
+    }
+
+    return !existingCompanies.has(
+      normalizeCompany(company)
+    );
+  });
+
+  if (!results || results.length === 0) { 
 
     prospectResults.innerHTML = `
       <div class="empty-leads">
@@ -7855,7 +7904,7 @@ function renderCampaigns() {
 
 document.addEventListener(
   "click",
-  (event) => {
+  async (event) => {
 
     /* =========================
        LIHAT
@@ -7904,7 +7953,7 @@ ${campaign.message}`
       return;
     }
 
-    /* =========================
+   /* =========================
    JADIKAN DEFAULT
    ========================= */
 
@@ -7914,7 +7963,8 @@ const defaultBtn =
   );
 
 if (defaultBtn) {
-event.stopImmediatePropagation();
+
+  event.stopImmediatePropagation();
 
   const id =
     Number(
@@ -7931,17 +7981,104 @@ event.stopImmediatePropagation();
     return;
   }
 
+  /* =========================
+     UPDATE STATUS DEFAULT
+     DI DATA LOKAL
+     ========================= */
+
   campaigns.forEach(
     campaign => {
+
       campaign.isDefault =
         Number(campaign.id) === id;
+
     }
   );
+
+  /* =========================
+     SIMPAN DEFAULT KE SUPABASE
+     ========================= */
+
+  const { error } =
+    await supabase
+      .from("leadflow_campaigns")
+      .update({
+        is_default: true
+      })
+      .eq(
+        "id",
+        selectedCampaign.cloudId ||
+        selectedCampaign.id
+      );
+
+  if (error) {
+
+    console.error(
+      "Gagal menjadikan campaign default:",
+      error
+    );
+
+    alert(
+      "Campaign gagal dijadikan Default."
+    );
+
+    return;
+  }
+
+  /* =========================
+     PASTIKAN CAMPAIGN LAIN
+     BUKAN DEFAULT
+     ========================= */
+
+  const otherCampaigns =
+    campaigns.filter(
+      campaign =>
+        Number(campaign.id) !== id
+    );
+
+  for (
+    const campaign of otherCampaigns
+  ) {
+
+    const { error: resetError } =
+      await supabase
+        .from("leadflow_campaigns")
+        .update({
+          is_default: false
+        })
+        .eq(
+          "id",
+          campaign.cloudId ||
+          campaign.id
+        );
+
+    if (resetError) {
+
+      console.error(
+        "Gagal mereset campaign default:",
+        resetError
+      );
+
+      alert(
+        "Default tersimpan, tetapi campaign lain gagal direset."
+      );
+
+      return;
+    }
+  }
+
+  /* =========================
+     SIMPAN KE LOCALSTORAGE
+     ========================= */
 
   localStorage.setItem(
     CAMPAIGN_STORAGE_KEY,
     JSON.stringify(campaigns)
   );
+
+  /* =========================
+     RENDER ULANG
+     ========================= */
 
   renderCampaigns();
 
