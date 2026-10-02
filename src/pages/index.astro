@@ -3565,6 +3565,246 @@ body.light-theme #themeSelect option {
   display: block;
 }
 
+/* =====================================================
+   LEADFLOW MOBILE - DASHBOARD & DATABASE
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .main {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  /* =========================
+     DASHBOARD
+     ========================= */
+
+  .page {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+  }
+
+  #page-dashboard {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* STAT CARD JADI 1 KOLOM */
+  #page-dashboard .stats {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  #page-dashboard .stat-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* SEMUA GRID DASHBOARD JADI 1 KOLOM */
+  #page-dashboard .content-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  #page-dashboard .content-grid > .card {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* CARD HEADER */
+  #page-dashboard .card-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  #page-dashboard .card-header .green-btn {
+    width: 100% !important;
+  }
+
+  /* PIPELINE */
+  #page-dashboard .pipeline {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ACTIVITY */
+  #page-dashboard .activity-card {
+    width: 100% !important;
+  }
+
+  #page-dashboard .activity {
+    min-width: 0 !important;
+  }
+
+
+  /* =========================
+     DATABASE LEADS
+     ========================= */
+
+  #page-leads {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  #page-leads > .card {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* HEADER DATABASE */
+  #page-leads .card-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  #page-leads .card-header > div {
+    min-width: 0 !important;
+  }
+
+  #page-leads #addLeadPage {
+    width: 100% !important;
+  }
+
+  /* FILTER DATABASE */
+  #page-leads #leadFilters {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+  }
+
+  #page-leads #leadFilters .form-group {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #page-leads #leadFilters input,
+  #page-leads #leadFilters select {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* TABLE */
+  #page-leads .table-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #page-leads .table-wrap table {
+    width: 720px !important;
+    min-width: 720px !important;
+  }
+
+  #page-leads .table-wrap th,
+  #page-leads .table-wrap td {
+    white-space: nowrap !important;
+  }
+
+
+  /* =========================
+     TOPBAR
+     ========================= */
+
+  .topbar {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+  }
+
+  .welcome {
+    min-width: 0;
+  }
+
+  .welcome h1 {
+    font-size: 18px;
+    line-height: 1.3;
+  }
+
+  .welcome p {
+    font-size: 11px;
+  }
+
+  .user > div:last-child {
+    display: none;
+  }
+
+
+  /* =========================
+     FORM
+     ========================= */
+
+  input,
+  select,
+  textarea {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+
+  /* =========================
+     BUTTON
+     ========================= */
+
+  .green-btn {
+    min-height: 42px;
+  }
+
+}
+
+
+/* =====================================================
+   HP KECIL
+   ===================================================== */
+
+@media (max-width: 480px) {
+
+  .page {
+    padding: 10px;
+  }
+
+  #page-dashboard .stat-card {
+    padding: 14px;
+  }
+
+  #page-dashboard .stat-value {
+    font-size: 24px;
+  }
+
+  #page-dashboard .card,
+  #page-leads > .card {
+    border-radius: 12px;
+  }
+
+  .welcome h1 {
+    font-size: 16px;
+  }
+
+}
+
   </style>
 </head>
 
@@ -4672,6 +4912,61 @@ body.light-theme #themeSelect option {
     </div>
   </div>
 
+  <!-- =====================================================
+     PENGATURAN APIFY
+     ===================================================== -->
+
+<div class="settings-card">
+
+  <div class="settings-card-header">
+    <div>
+      <h2>Pengaturan Apify</h2>
+      <p>
+        Ganti token Apify tanpa perlu mengubah konfigurasi Vercel.
+      </p>
+    </div>
+  </div>
+
+  <div class="settings-form">
+
+    <div class="form-group">
+
+      <label for="apifyTokenInput">
+        Apify API Token
+      </label>
+
+      <input
+        type="password"
+        id="apifyTokenInput"
+        placeholder="Masukkan token Apify"
+        autocomplete="new-password"
+      />
+
+      <small
+        id="apifyTokenStatus"
+        style="
+          display:block;
+          margin-top:8px;
+          color:#8d9a91;
+        "
+      >
+        Token belum diubah.
+      </small>
+
+    </div>
+
+    <button
+      type="button"
+      class="green-btn"
+      id="saveApifyTokenBtn"
+    >
+      Simpan Token
+    </button>
+
+  </div>
+
+</div>
+
     <div class="settings-card">
     <div class="settings-card-header">
       <div>
@@ -5070,6 +5365,8 @@ Apakah kami boleh mengirimkan informasi lengkapnya?"
   </div>
 
 </div>
+
+
 
 <script>
 
@@ -10235,6 +10532,87 @@ localStorage.setItem(
 }
 
 mulaiDataGlobal();
+
+const saveApifyTokenBtn = document.getElementById("saveApifyTokenBtn");
+const apifyTokenInput = document.getElementById("apifyTokenInput");
+const apifyTokenStatus = document.getElementById("apifyTokenStatus");
+
+if (saveApifyTokenBtn) {
+  saveApifyTokenBtn.addEventListener("click", async () => {
+    const token = apifyTokenInput?.value.trim();
+
+    if (!token) {
+      apifyTokenStatus.textContent =
+        "Masukkan token Apify terlebih dahulu.";
+      apifyTokenStatus.style.color = "#ff6b6b";
+      return;
+    }
+
+    saveApifyTokenBtn.disabled = true;
+    saveApifyTokenBtn.textContent = "Menyimpan...";
+
+    try {
+      const { data: sessionData } =
+        await supabase.auth.getSession();
+
+      const session = sessionData?.session;
+
+      if (!session) {
+        throw new Error(
+          "Sesi login tidak ditemukan. Silakan login kembali."
+        );
+      }
+
+      const response = await fetch(
+        "/api/apify-settings",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization":
+              `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            token
+          })
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message ||
+          "Gagal menyimpan token."
+        );
+      }
+
+      apifyTokenStatus.textContent =
+        "✓ Token Apify berhasil disimpan.";
+      apifyTokenStatus.style.color = "#4ade80";
+
+      apifyTokenInput.value = "";
+
+    } catch (error) {
+      console.error(
+        "APIFY TOKEN ERROR:",
+        error
+      );
+
+      apifyTokenStatus.textContent =
+        error?.message ||
+        "Gagal menyimpan token.";
+
+      apifyTokenStatus.style.color =
+        "#ff6b6b";
+
+    } finally {
+      saveApifyTokenBtn.disabled = false;
+      saveApifyTokenBtn.textContent =
+        "Simpan Token";
+    }
+  });
+}
 
   </script>
 
