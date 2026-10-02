@@ -1,3 +1,5 @@
+import { createClient } from "@supabase/supabase-js";
+
 export async function POST({ request }) {
   try {
     const body = await request.json();
@@ -21,7 +23,35 @@ export async function POST({ request }) {
       );
     }
 
-    const token = import.meta.env.APIFY_API_TOKEN;
+    const supabaseUrl =
+  import.meta.env.PUBLIC_SUPABASE_URL;
+
+const serviceRoleKey =
+  import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+
+let token =
+  import.meta.env.APIFY_API_TOKEN;
+
+if (supabaseUrl && serviceRoleKey) {
+  const settingsClient = createClient(
+    supabaseUrl,
+    serviceRoleKey
+  );
+
+  const { data: setting } =
+    await settingsClient
+      .from("app_settings")
+      .select("setting_value")
+      .eq(
+        "setting_key",
+        "apify_api_token"
+      )
+      .maybeSingle();
+
+  if (setting?.setting_value) {
+    token = setting.setting_value;
+  }
+}
 
     if (!token) {
       console.error("APIFY_API_TOKEN tidak ditemukan.");
